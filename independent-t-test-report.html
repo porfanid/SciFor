@@ -236,7 +236,8 @@
             const report = generateAPA7Narrative(
                 formattedM1, formattedSD1, formattedM2, formattedSD2,
                 formattedT, formattedDf, formattedP, formattedD,
-                isSignificant, effectSizeInterpretation, comparisonText
+                isSignificant, effectSizeInterpretation, comparisonText,
+                m1, m2
             );
             
             // Display the report
@@ -281,22 +282,23 @@
         
         function getComparisonText(m1, m2) {
             if (m1 > m2) {
-                return 'Group 1 scored significantly higher than Group 2';
+                return 'Group 1 scored higher than Group 2';
             } else if (m2 > m1) {
-                return 'Group 2 scored significantly higher than Group 1';
+                return 'Group 2 scored higher than Group 1';
             } else {
                 return 'Both groups had equal means';
             }
         }
         
-        function generateAPA7Narrative(m1, sd1, m2, sd2, t, df, pFormatted, d, 
-                                        isSignificant, effectSize, comparison) {
+        function generateAPA7Narrative(fmtM1, fmtSD1, fmtM2, fmtSD2, t, df, pFormatted, d, 
+                                        isSignificant, effectSize, comparison,
+                                        originalM1, originalM2) {
             let narrative = '';
             
             // First paragraph: Descriptive statistics
             narrative += '<p>An independent samples <i>t</i>-test was conducted to compare ';
             narrative += 'the scores between Group 1 and Group 2. ';
-            narrative += 'Group 1 (<i>M</i> = ' + m1 + ', <i>SD</i> = ' + sd1 + ') ';
+            narrative += 'Group 1 (<i>M</i> = ' + fmtM1 + ', <i>SD</i> = ' + fmtSD1 + ') ';
             
             if (isSignificant) {
                 narrative += 'differed significantly from ';
@@ -304,7 +306,7 @@
                 narrative += 'did not differ significantly from ';
             }
             
-            narrative += 'Group 2 (<i>M</i> = ' + m2 + ', <i>SD</i> = ' + sd2 + ').</p>';
+            narrative += 'Group 2 (<i>M</i> = ' + fmtM2 + ', <i>SD</i> = ' + fmtSD2 + ').</p>';
             
             // Second paragraph: Test statistics and interpretation
             narrative += '<p>The independent samples <i>t</i>-test ';
@@ -325,8 +327,8 @@
             if (isSignificant) {
                 narrative += ', indicating a ' + effectSize + ' practical significance. ';
                 
-                // Direction of difference
-                if (parseFloat(m1) !== parseFloat(m2)) {
+                // Direction of difference - use original numeric values for comparison
+                if (originalM1 !== originalM2) {
                     narrative += comparison + '.</p>';
                 } else {
                     narrative += '</p>';
