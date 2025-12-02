@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Independent T-Test Report Generator (APA 7th)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        input[type="number"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        #output.visible {
+            display: block;
+        }
+        .report-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .report-content {
+            line-height: 2;
+            text-align: justify;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #f8d7da;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Independent T-Test Report Generator</h1>
+        <p style="text-align: center; color: #666;">APA 7th Edition Format</p>
+        
+        <form id="tTestForm">
+            <div class="section-title">Group 1 Statistics</div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="m1">Mean (<i>M</i><sub>1</sub>):</label>
+                    <input type="number" id="m1" step="any" required placeholder="e.g., 45.2">
+                </div>
+                <div class="form-group">
+                    <label for="sd1">Standard Deviation (<i>SD</i><sub>1</sub>):</label>
+                    <input type="number" id="sd1" step="any" min="0" required placeholder="e.g., 8.5">
+                </div>
+            </div>
+            
+            <div class="section-title">Group 2 Statistics</div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="m2">Mean (<i>M</i><sub>2</sub>):</label>
+                    <input type="number" id="m2" step="any" required placeholder="e.g., 38.7">
+                </div>
+                <div class="form-group">
+                    <label for="sd2">Standard Deviation (<i>SD</i><sub>2</sub>):</label>
+                    <input type="number" id="sd2" step="any" min="0" required placeholder="e.g., 7.3">
+                </div>
+            </div>
+            
+            <div class="section-title">Test Statistics</div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="t"><i>t</i>-statistic:</label>
+                    <input type="number" id="t" step="any" required placeholder="e.g., 2.45">
+                </div>
+                <div class="form-group">
+                    <label for="df">Degrees of Freedom (<i>df</i>):</label>
+                    <input type="number" id="df" step="any" min="0" required placeholder="e.g., 58">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="form-group">
+                    <label for="p"><i>p</i>-value:</label>
+                    <input type="number" id="p" step="any" min="0" max="1" required placeholder="e.g., 0.017">
+                </div>
+                <div class="form-group">
+                    <label for="d">Cohen's <i>d</i>:</label>
+                    <input type="number" id="d" step="any" required placeholder="e.g., 0.65">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="alpha">Significance Level (α):</label>
+                <input type="number" id="alpha" step="any" min="0" max="1" value="0.05" placeholder="default: 0.05">
+            </div>
+            
+            <button type="submit">Generate Report</button>
+        </form>
+        
+        <div id="output">
+            <div class="report-title">Independent Samples T-Test Results (APA 7th Edition)</div>
+            <div class="report-content" id="reportContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('tTestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateReport();
+        });
+        
+        function generateReport() {
+            // Get input values
+            const m1 = parseFloat(document.getElementById('m1').value);
+            const sd1 = parseFloat(document.getElementById('sd1').value);
+            const m2 = parseFloat(document.getElementById('m2').value);
+            const sd2 = parseFloat(document.getElementById('sd2').value);
+            const t = parseFloat(document.getElementById('t').value);
+            const df = parseFloat(document.getElementById('df').value);
+            const p = parseFloat(document.getElementById('p').value);
+            const d = parseFloat(document.getElementById('d').value);
+            const alpha = parseFloat(document.getElementById('alpha').value) || 0.05;
+            
+            // Validate inputs
+            if (isNaN(m1) || isNaN(sd1) || isNaN(m2) || isNaN(sd2) || 
+                isNaN(t) || isNaN(df) || isNaN(p) || isNaN(d)) {
+                showError('Please fill in all required fields with valid numbers.');
+                return;
+            }
+            
+            if (sd1 < 0 || sd2 < 0) {
+                showError('Standard deviation values must be non-negative.');
+                return;
+            }
+            
+            if (p < 0 || p > 1) {
+                showError('p-value must be between 0 and 1.');
+                return;
+            }
+            
+            if (df < 0) {
+                showError('Degrees of freedom must be non-negative.');
+                return;
+            }
+            
+            // Check significance
+            const isSignificant = p < alpha;
+            
+            // Format p-value according to APA 7th
+            const formattedP = formatPValue(p);
+            
+            // Format other statistics (2 decimal places)
+            const formattedM1 = formatNumber(m1);
+            const formattedSD1 = formatNumber(sd1);
+            const formattedM2 = formatNumber(m2);
+            const formattedSD2 = formatNumber(sd2);
+            const formattedT = formatNumber(t);
+            const formattedDf = formatDf(df);
+            const formattedD = formatNumber(d);
+            
+            // Interpret effect size (Cohen's d)
+            const effectSizeInterpretation = interpretEffectSize(Math.abs(d));
+            
+            // Determine which group has the higher mean
+            const comparisonText = getComparisonText(m1, m2);
+            
+            // Generate APA 7th format narrative
+            const report = generateAPA7Narrative(
+                formattedM1, formattedSD1, formattedM2, formattedSD2,
+                formattedT, formattedDf, formattedP, formattedD,
+                isSignificant, effectSizeInterpretation, comparisonText,
+                m1, m2
+            );
+            
+            // Display the report
+            const outputDiv = document.getElementById('output');
+            const reportContentDiv = document.getElementById('reportContent');
+            reportContentDiv.innerHTML = report;
+            outputDiv.classList.add('visible');
+        }
+        
+        function formatPValue(p) {
+            if (p < 0.001) {
+                return '<i>p</i> &lt; .001';
+            } else {
+                // APA format: remove leading zero for p-values
+                return '<i>p</i> = ' + p.toFixed(2).replace(/^0/, '');
+            }
+        }
+        
+        function formatNumber(num) {
+            return num.toFixed(2);
+        }
+        
+        function formatDf(df) {
+            // If df is a whole number, display without decimals
+            if (Number.isInteger(df)) {
+                return df.toString();
+            }
+            return df.toFixed(2);
+        }
+        
+        function interpretEffectSize(absD) {
+            if (absD < 0.2) {
+                return 'negligible';
+            } else if (absD < 0.5) {
+                return 'small';
+            } else if (absD < 0.8) {
+                return 'medium';
+            } else {
+                return 'large';
+            }
+        }
+        
+        function getComparisonText(m1, m2) {
+            if (m1 > m2) {
+                return 'Group 1 scored higher than Group 2';
+            } else if (m2 > m1) {
+                return 'Group 2 scored higher than Group 1';
+            } else {
+                return 'Both groups had equal means';
+            }
+        }
+        
+        function generateAPA7Narrative(fmtM1, fmtSD1, fmtM2, fmtSD2, t, df, pFormatted, d, 
+                                        isSignificant, effectSize, comparison,
+                                        originalM1, originalM2) {
+            let narrative = '';
+            
+            // First paragraph: Descriptive statistics
+            narrative += '<p>An independent samples <i>t</i>-test was conducted to compare ';
+            narrative += 'the scores between Group 1 and Group 2. ';
+            narrative += 'Group 1 (<i>M</i> = ' + fmtM1 + ', <i>SD</i> = ' + fmtSD1 + ') ';
+            
+            if (isSignificant) {
+                narrative += 'differed significantly from ';
+            } else {
+                narrative += 'did not differ significantly from ';
+            }
+            
+            narrative += 'Group 2 (<i>M</i> = ' + fmtM2 + ', <i>SD</i> = ' + fmtSD2 + ').</p>';
+            
+            // Second paragraph: Test statistics and interpretation
+            narrative += '<p>The independent samples <i>t</i>-test ';
+            
+            if (isSignificant) {
+                narrative += 'revealed a statistically significant difference between the two groups, ';
+            } else {
+                narrative += 'did not reveal a statistically significant difference between the two groups, ';
+            }
+            
+            // APA 7th format: t(df) = value, p = value, d = value
+            narrative += '<i>t</i>(' + df + ') = ' + t + ', ' + pFormatted + ', ';
+            narrative += 'Cohen\'s <i>d</i> = ' + d + '. ';
+            
+            // Effect size interpretation
+            narrative += 'The effect size was ' + effectSize;
+            
+            if (isSignificant) {
+                narrative += ', indicating a ' + effectSize + ' practical significance. ';
+                
+                // Direction of difference - use original numeric values for comparison
+                if (originalM1 !== originalM2) {
+                    narrative += comparison + '.</p>';
+                } else {
+                    narrative += '</p>';
+                }
+            } else {
+                narrative += '. Despite the lack of statistical significance, ';
+                narrative += 'the practical effect size should still be considered when interpreting these results.</p>';
+            }
+            
+            return narrative;
+        }
+        
+        function showError(message) {
+            const outputDiv = document.getElementById('output');
+            const reportContentDiv = document.getElementById('reportContent');
+            reportContentDiv.innerHTML = '<div class="error">' + message + '</div>';
+            outputDiv.classList.add('visible');
+        }
+    </script>
+</body>
+</html>
